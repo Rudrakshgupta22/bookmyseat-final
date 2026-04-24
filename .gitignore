@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+venv310/
+.env
+.env.*
+ENV/
+env/
+render_env_vars.txt
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Task and implementation documents
+ARCHITECTURE.md
+CHANGES_SUMMARY.md
+DOCUMENTATION_INDEX.md
+IMPLEMENTATION.md
+README_COMPLETE.md
+README_IMPLEMENTATION.md
+README-Python-3.10-Setup.md
+"final evaluation.md"
+task 2.md
+task 3.md
+task 4 .md
+task 5.md
+task 6.md
+
+# Deployment
+.env
+
+# Media files
+/media/
+
+.python-version

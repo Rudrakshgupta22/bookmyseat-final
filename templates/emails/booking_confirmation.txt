@@ -1,0 +1,18 @@
+Booking confirmed for {{ booking_batch.movie.name }}
+
+Hello {{ booking_batch.user.username }},
+
+Your booking has been confirmed successfully.
+
+Booking reference: {{ booking_batch.booking_reference }}
+Payment ID: {{ booking_batch.payment_id }}
+Movie: {{ booking_batch.movie.name }}
+Theater: {{ booking_batch.theater.name }}
+Show timing: {{ show_time|date:"F d, Y h:i A" }}
+Seats: {% for seat in seat_numbers %}{{ seat }}{% if not forloop.last %}, {% endif %}{% endfor %}
+Tickets: {{ booking_batch.total_tickets }}
+
+Please keep this email for your records.
+
+Thank you,
+BookMySeat

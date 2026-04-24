@@ -1,0 +1,55 @@
+{% extends "users/basic.html" %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow border-0">
+        <div class="card-body p-4 p-lg-5">
+          <p class="text-uppercase small text-muted mb-2">Payment Status</p>
+          <h1 class="h3 mb-3">{{ status_title }}</h1>
+          <p class="lead">{{ status_copy }}</p>
+          {% if verification_error %}
+            <div class="alert alert-warning">{{ verification_error }}</div>
+          {% endif %}
+
+          <div class="row g-3 mt-4">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <div class="small text-muted">Booking Reference</div>
+                <strong>{{ booking_batch.booking_reference }}</strong>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <div class="small text-muted">Current State</div>
+                <strong>{{ booking_batch.get_status_display }}</strong>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <div class="small text-muted">Movie</div>
+                <strong>{{ booking_batch.movie.name }}</strong>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <div class="small text-muted">Theater</div>
+                <strong>{{ booking_batch.theater.name }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex flex-wrap gap-3">
+            <a href="{% url 'profile' %}" class="btn btn-primary">Go to Profile</a>
+            <a href="{% url 'theater_list' booking_batch.movie.id %}" class="btn btn-outline-secondary">Back to Theaters</a>
+            {% if booking_batch.status == 'payment_processing' or booking_batch.status == 'pending_payment' %}
+              <a href="{% url 'payment_success' booking_batch.booking_reference %}?session_id={{ request.GET.session_id|default:'' }}" class="btn btn-outline-dark">Refresh Verification</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

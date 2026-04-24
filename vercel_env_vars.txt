@@ -1,0 +1,36 @@
+# Vercel environment variables for this Django backend
+# Copy these keys into Vercel project settings and replace the placeholder values.
+
+DJANGO_SECRET_KEY=your-django-secret-key
+DEBUG=False
+ALLOWED_HOSTS=your-app-name.vercel.app
+CSRF_TRUSTED_ORIGINS=https://your-app-name.vercel.app
+DATABASE_URL=postgresql://username:password@host:port/database_name
+
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-email-app-password
+EMAIL_QUEUE_AUTOSTART=True
+BOOKING_EMAIL_MAX_RETRIES=3
+BOOKING_EMAIL_RETRY_DELAY_SECONDS=30
+BOOKING_EMAIL_QUEUE_POLL_INTERVAL_SECONDS=5
+BOOKING_EMAIL_PROCESSING_TIMEOUT_SECONDS=300
+
+PAYMENT_GATEWAY_PROVIDER=stripe
+PAYMENT_CURRENCY=inr
+PAYMENT_TICKET_PRICE_MINOR=25000
+PAYMENT_HOLD_DURATION_MINUTES=2
+SEAT_RESERVATION_TIMEOUT_MINUTES=2
+SEAT_RESERVATION_CLEANUP_INTERVAL_SECONDS=5
+SEAT_RESERVATION_AUTOSTART=True
+
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
+STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+STRIPE_API_BASE=https://api.stripe.com
+STRIPE_WEBHOOK_TOLERANCE_SECONDS=300
+
+ANALYTICS_CACHE_TIMEOUT_SECONDS=60
+
+# Notes:
+# - Vercel automatically provides VERCEL=1 in its environment, so you don't need to set it.
+# - RUN_MAIN is only used by Django's dev auto-reloader and should not be set manually.

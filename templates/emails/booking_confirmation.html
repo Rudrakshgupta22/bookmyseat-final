@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Booking Confirmation</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;color:#1f2933;">
+    <div style="max-width:640px;margin:24px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+      <div style="background:#0f766e;padding:24px;color:#ffffff;">
+        <h1 style="margin:0;font-size:24px;">Booking Confirmed</h1>
+        <p style="margin:8px 0 0;font-size:14px;">Your seats are locked in and ready for the show.</p>
+      </div>
+
+      <div style="padding:24px;">
+        <p style="margin-top:0;">Hello {{ booking_batch.user.username }},</p>
+        <p>Your booking for <strong>{{ booking_batch.movie.name }}</strong> has been confirmed.</p>
+
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Booking Reference</td>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;">{{ booking_batch.booking_reference }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Payment ID</td>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;">{{ booking_batch.payment_id }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Theater</td>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;">{{ booking_batch.theater.name }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Show Timing</td>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;">{{ show_time|date:"F d, Y h:i A" }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Seats</td>
+            <td style="padding:10px;border-bottom:1px solid #e5e7eb;">{% for seat in seat_numbers %}{{ seat }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;font-weight:bold;">Tickets</td>
+            <td style="padding:10px;">{{ booking_batch.total_tickets }}</td>
+          </tr>
+        </table>
+
+        <p style="margin-bottom:0;">Please keep this email for your records. No payment secrets or card details are included in this message.</p>
+      </div>
+    </div>
+  </body>
+</html>

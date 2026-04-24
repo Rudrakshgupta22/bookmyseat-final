@@ -1,0 +1,333 @@
+{% extends "users/basic.html" %}
+{% load custom_tags %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <h1 class="text-center mb-5">Movies</h1>
+
+    <!-- Advanced Filtering Panel -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <!-- Filters Sidebar -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{% url 'movie_list' %}" id="filterForm" class="filter-form">
+                        <!-- Search Input -->
+                        <div class="mb-4">
+                            <label for="search" class="form-label fw-bold">Search</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="search"
+                                name="search"
+                                placeholder="Movie name"
+                                value="{{ search_query|default:'' }}"
+                            />
+                        </div>
+
+                        <!-- Genre Filter -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Genres</label>
+                            <div id="genreFilters" class="filter-group">
+                                {% if all_genres %}
+                                    {% for genre in all_genres %}
+                                        {% with count=filter_counts.genres|get_item:genre.id %}
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    id="genre_{{ genre.id }}"
+                                                    name="genres"
+                                                    value="{{ genre.id }}"
+                                                    {% if genre.id in selected_genres %}checked{% endif %}
+                                                />
+                                                <label class="form-check-label" for="genre_{{ genre.id }}">
+                                                    {{ genre.name }}
+                                                    <span class="badge bg-secondary">{{ count.count|default:0 }}</span>
+                                                </label>
+                                            </div>
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted small">No genres available</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Language Filter -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Languages</label>
+                            <div id="languageFilters" class="filter-group">
+                                {% if all_languages %}
+                                    {% for language in all_languages %}
+                                        {% with count=filter_counts.languages|get_item:language.id %}
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    id="lang_{{ language.id }}"
+                                                    name="languages"
+                                                    value="{{ language.id }}"
+                                                    {% if language.id in selected_languages %}checked{% endif %}
+                                                />
+                                                <label class="form-check-label" for="lang_{{ language.id }}">
+                                                    {{ language.name }}
+                                                    <span class="badge bg-secondary">{{ count.count|default:0 }}</span>
+                                                </label>
+                                            </div>
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted small">No languages available</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Sorting -->
+                        <div class="mb-4">
+                            <label for="sort" class="form-label fw-bold">Sort By</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                                <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>Name (Z-A)</option>
+                                <option value="-rating" {% if sort_by == '-rating' %}selected{% endif %}>Highest Rated</option>
+                                <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Lowest Rated</option>
+                                <option value="-release_date" {% if sort_by == '-release_date' %}selected{% endif %}>Newest</option>
+                                <option value="release_date" {% if sort_by == 'release_date' %}selected{% endif %}>Oldest</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Apply Filters
+                            </button>
+                            <a href="{% url 'movie_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo"></i> Clear All
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movies Display -->
+        <div class="col-md-9">
+            <!-- Results Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-0">
+                        Results: <span class="badge bg-info">{{ total_count }}</span>
+                    </h5>
+                    {% if search_query %}
+                        <p class="small text-muted mb-0">
+                            Searching for: <strong>{{ search_query }}</strong>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Movies Grid -->
+            <div class="row" id="movieList">
+                {% for movie in movies %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm movie-card">
+                        <img
+                            src="{% if movie.image %}{{ movie.image.url }}{% else %}https://via.placeholder.com/400x250?text=Movie+Poster{% endif %}"
+                            class="card-img-top"
+                            alt="{{ movie.name }}"
+                            style="height: 250px; object-fit: cover;"
+                        />
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.name }}</h5>
+                            
+                            <!-- Rating -->
+                            <p class="card-text">
+                                <i class="fas fa-star text-warning"></i>
+                                <strong>{{ movie.rating }}</strong>/10
+                            </p>
+
+                            <!-- Genres -->
+                            {% if movie.genres.all %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <strong>Genres:</strong><br>
+                                        {% for genre in movie.genres.all %}
+                                            <span class="badge bg-light text-dark">{{ genre.name }}</span>
+                                        {% endfor %}
+                                    </small>
+                                </p>
+                            {% endif %}
+
+                            <!-- Languages -->
+                            {% if movie.languages.all %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <strong>Languages:</strong><br>
+                                        {% for language in movie.languages.all %}
+                                            <span class="badge bg-light text-dark">{{ language.name }}</span>
+                                        {% endfor %}
+                                    </small>
+                                </p>
+                            {% endif %}
+
+                            <!-- Cast -->
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-users"></i> Cast: {{ movie.cast|truncatewords:5 }}
+                                </small>
+                            </p>
+
+                            <!-- Release Date -->
+                            {% if movie.release_date %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ movie.release_date|date:"d M Y" }}
+                                    </small>
+                                </p>
+                            {% endif %}
+
+                            <!-- Duration -->
+                            {% if movie.duration %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> {{ movie.duration }} mins
+                                    </small>
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="{% url 'movie_detail' movie.id %}" class="btn btn-primary btn-sm w-100">
+                                View Details <i class="fas fa-chevron-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center" role="alert">
+                        <i class="fas fa-search fs-3 mb-3"></i>
+                        <h5>No movies found</h5>
+                        <p class="mb-0">Try adjusting your filters or search term</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-5" aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous Button -->
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ request.GET.urlencode }}&page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">First</span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                    {% endif %}
+
+                    <!-- Page Numbers -->
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{ num }}
+                                    <span class="visually-hidden">(current)</span>
+                                </span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ num }}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next Button -->
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ paginator.num_pages }}">
+                                Last
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">Last</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap & Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<style>
+    .movie-card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .movie-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .filter-form {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .filter-group {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .badge {
+        margin-left: 5px;
+    }
+
+    @media (max-width: 768px) {
+        .col-md-3 {
+            margin-bottom: 2rem;
+        }
+    }
+</style>
+
+<script>
+    // Auto-submit form when filters change
+    document.querySelectorAll('input[type="checkbox"], select').forEach(element => {
+        element.addEventListener('change', function() {
+            // Optional: Auto-submit on change
+            // document.getElementById('filterForm').submit();
+        });
+    });
+</script>
+{% endblock %}

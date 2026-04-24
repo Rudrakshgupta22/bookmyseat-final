@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}BookMySeat{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .navbar {
+        background-color: #fff;
+        padding: 10px 20px;
+      }
+      .navbar-brand img {
+        height: 40px;
+      }
+      .navbar-nav .nav-link {
+        color: #000;
+      }
+      .banner {
+        background-color: #f8f9fa;
+        padding: 20px;
+        text-align: center;
+      }
+      .banner img {
+        max-width: 100%;
+        height: auto;
+      }
+      .section-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+      }
+      .card img {
+        height: 200px;
+        object-fit: cover;
+      }
+      .footer {
+        background-color: #343a40;
+        color: #f8f9fa;
+        padding: 20px 0;
+      }
+      .footer a {
+        color: #f8f9fa;
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+      .footer .social-icons i {
+        font-size: 24px;
+        margin: 0 10px;
+        transition: color 0.3s;
+      }
+      .footer .social-icons i:hover {
+        color: #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="/"
+          ><img
+            src="data:image/jpeg;base64,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Nt7fObnmCt+8njhQnatL3kXivHDQYUb0koCAN28HBHAjkjHku7TtW6vslFVP9OWFrnd+N6uVnmsOE1mLutRekdIlg6w08dQUkMcc4hmhcXMc4ZaQRgg/JYvTtp9u13+JeZmOYlztu6ONmUOuVftsByY4G7OfZk/ooow+r082/wDMcYqfV3NFRU9FTMp6SMRRMGGtarHER0c/ky3y27d55l7jdu5I0U/riu8u1PVFrssgxA3/AI8fmSquWebO02nD3ekrz58y0KjeiICAgICAsSCyCAgICAgICAgICAgILV0XeLYLJQ0IrohURxBro3nZOfZnj4K1S1eOHH7lps86i+SaTxMupznmpHkykBBKMsO6VTaKgqap53RRl3jjcsW8I5SYcc5MlaR5yo2R7pHvkecue4ucfaTkqk+gRWKxFY8nyjIgICAgIIWJErIICAgICAgICAgICAgggHiAe9GeZZ9uvFztuPIa2eNo4R7W03/xOR8FtF7R0Vs2k0+b8SkT+7qLd0iVcYDa+ljmHN8Xmn4cFJXNPnDys2xY5/Dtx8XS2/Wtmrdzqh1O/smbgfHgpYy1l5WbaNVj6RzH5MHpEucbbE2GCVj/ACmQAljgRsjeeC0y28PBPs+mt/kTa0ccR+qslXdWICAgICAgICAgICAgICAgICAgICAgICyc8CwHZ7EY4EZEBAQEBAQEBAQEBAQEBAQEEIJQEBAQEBAQEBAQEBAQEBAQEBAQEEBAQSgICAgICAghBKAgICAgICAgICAgICAgICAgICAgICAghBKAgICAgICAgICAgICAg//Z"
+            alt="logo"
+            height="40"
+            width="45"
+          />
+          BookMySeat</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/movies">Movies</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+            </li>
+            <li class="nav-item">
+              <form method="Post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="nav-link"
+                  style="border: none; background: none"
+                >
+                  Logout
+                </button>
+              </form>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'register' %}">Register</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">{% block content %} {% endblock %}</div>
+    <footer class="footer mt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 mb-4 mb-md-0">
+            <h5>About Us</h5>
+            <p>
+              We provide the best movie experience in town. Book your tickets
+              now and enjoy the show!
+            </p>
+          </div>
+          <div class="col-md-4 mb-4 mb-md-0">
+            <h5>Quick Links</h5>
+            <ul class="list-unstyled">
+              <li><a href="#">Home</a></li>
+              <li><a href="#">Movies</a></li>
+              <li><a href="#">Book Tickets</a></li>
+              <li><a href="#">Contact</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <h5>Follow Us</h5>
+            <div class="social-icons">
+              <a href="#"><i class="fab fa-facebook"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+        <hr class="mt-4 mb-4" />
+        <div class="text-center">
+          <p>&copy; 2024 Cinema Booking. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  </body>
+</html>

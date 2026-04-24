@@ -1,0 +1,415 @@
+{% extends "users/basic.html" %}
+
+{% block content %}
+<div class="movie-detail-page py-5">
+  <div class="container">
+    <div class="detail-hero card border-0 shadow-lg overflow-hidden">
+      <div class="row g-0">
+        <div class="col-lg-4">
+          <img
+            src="{% if movie.image %}{{ movie.image.url }}{% else %}https://via.placeholder.com/500x700?text=Movie+Poster{% endif %}"
+            alt="{{ movie.name }}"
+            class="detail-poster"
+          />
+        </div>
+        <div class="col-lg-8">
+          <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
+              <div>
+                <p class="eyebrow mb-2">Movie Details</p>
+                <h1 class="display-6 mb-2">{{ movie.name }}</h1>
+                <p class="lead text-muted mb-0">{{ movie.description|default:"Book your show and enjoy the big screen experience." }}</p>
+              </div>
+              <div class="rating-pill">
+                <span class="rating-score">{{ movie.rating }}</span>
+                <span class="rating-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="meta-grid mb-4">
+              <div class="meta-card">
+                <span class="meta-label">Cast</span>
+                <span class="meta-value">{{ movie.cast }}</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Release</span>
+                <span class="meta-value">{% if movie.release_date %}{{ movie.release_date|date:"d M Y" }}{% else %}TBA{% endif %}</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Duration</span>
+                <span class="meta-value">{% if movie.duration %}{{ movie.duration }} mins{% else %}TBA{% endif %}</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Shows</span>
+                <span class="meta-value">{{ total_theaters }}</span>
+              </div>
+            </div>
+
+            {% if movie.genres.all %}
+              <div class="mb-3">
+                <p class="section-kicker mb-2">Genres</p>
+                {% for genre in movie.genres.all %}
+                  <span class="badge rounded-pill text-bg-light border me-2 mb-2">{{ genre.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if movie.languages.all %}
+              <div class="mb-4">
+                <p class="section-kicker mb-2">Languages</p>
+                {% for language in movie.languages.all %}
+                  <span class="badge rounded-pill language-chip me-2 mb-2">{{ language.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="d-flex flex-wrap gap-3">
+              {% if theaters %}
+                <a href="{% url 'theater_list' movie.id %}" class="btn btn-primary btn-lg">
+                  View Theaters
+                </a>
+              {% endif %}
+              <a href="{% url 'movie_list' %}" class="btn btn-outline-dark btn-lg">
+                Back to Movies
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm trailer-card">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <p class="eyebrow mb-1">Trailer</p>
+                <h2 class="h4 mb-0">Watch Safely</h2>
+              </div>
+              {% if movie.has_valid_trailer %}
+                <a href="{{ movie.safe_trailer_watch_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                  Open on YouTube
+                </a>
+              {% endif %}
+            </div>
+
+            {% if movie.has_valid_trailer %}
+              <div
+                class="trailer-player-shell"
+                data-video-id="{{ movie.trailer_video_id }}"
+                data-embed-base="https://www.youtube-nocookie.com/embed/"
+                data-watch-url="{{ movie.safe_trailer_watch_url }}"
+              >
+                <button
+                  type="button"
+                  class="trailer-launcher"
+                  aria-label="Play {{ movie.name }} trailer"
+                >
+                  <img
+                    src="{{ movie.safe_trailer_thumbnail_url }}"
+                    alt="{{ movie.name }} trailer preview"
+                    class="trailer-thumbnail"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                  />
+                  <span class="trailer-overlay">
+                    <span class="play-badge">Play Trailer</span>
+                    <span class="play-copy">Lazy loaded for better performance on slow networks.</span>
+                  </span>
+                </button>
+
+                <div class="trailer-fallback visually-hidden" role="status">
+                  <p class="mb-2">Trailer preview is currently unavailable.</p>
+                  <a href="{{ movie.safe_trailer_watch_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark btn-sm">
+                    Watch on YouTube
+                  </a>
+                </div>
+
+                <noscript>
+                  <div class="alert alert-secondary mb-0 mt-3">
+                    JavaScript is disabled. Use
+                    <a href="{{ movie.safe_trailer_watch_url }}" target="_blank" rel="noopener noreferrer">this YouTube link</a>
+                    to watch the trailer.
+                  </div>
+                </noscript>
+              </div>
+            {% else %}
+              <div class="alert alert-secondary mb-0">
+                Trailer unavailable right now. The page still loads without heavy media so browsing stays fast.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <p class="eyebrow mb-1">Showtimes</p>
+            <h2 class="h4 mb-3">Available Theaters</h2>
+            {% if theaters %}
+              <div class="theater-stack">
+                {% for theater in theaters %}
+                  <div class="theater-card">
+                    <div>
+                      <strong>{{ theater.name }}</strong>
+                      <div class="small text-muted">{{ theater.time|date:"d M Y, h:i A" }}</div>
+                    </div>
+                    <a href="{% url 'book_seats' theater.id %}" class="btn btn-sm btn-primary">Book</a>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="alert alert-light border mb-0">
+                No active showtimes found for this movie.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .movie-detail-page {
+    background:
+      radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 32%),
+      linear-gradient(180deg, #fff8ef 0%, #f7fafc 100%);
+    min-height: 100vh;
+  }
+
+  .detail-hero {
+    border-radius: 28px;
+    background: linear-gradient(135deg, #102a43 0%, #243b53 60%, #334e68 100%);
+    color: #f8fbff;
+  }
+
+  .detail-poster {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
+  }
+
+  .eyebrow,
+  .section-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #829ab1;
+  }
+
+  .rating-pill {
+    min-width: 120px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    text-align: center;
+  }
+
+  .rating-score {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .rating-label {
+    color: #bcccdc;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .meta-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px 16px;
+  }
+
+  .meta-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9fb3c8;
+    margin-bottom: 4px;
+  }
+
+  .meta-value {
+    color: #f8fbff;
+    font-weight: 600;
+  }
+
+  .language-chip {
+    background: #d9f2ef;
+    color: #0f766e;
+  }
+
+  .trailer-card,
+  .theater-card {
+    border-radius: 24px;
+  }
+
+  .trailer-player-shell {
+    position: relative;
+  }
+
+  .trailer-launcher {
+    position: relative;
+    width: 100%;
+    border: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    padding: 0;
+    background: #0f172a;
+    aspect-ratio: 16 / 9;
+    cursor: pointer;
+  }
+
+  .trailer-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .trailer-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    align-items: start;
+    gap: 10px;
+    padding: 24px;
+    color: #fff;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.08) 0%, rgba(2, 6, 23, 0.78) 100%);
+  }
+
+  .play-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: #f97316;
+    font-weight: 700;
+  }
+
+  .play-copy {
+    max-width: 320px;
+    text-align: left;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .trailer-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 22px;
+    display: block;
+    background: #000;
+  }
+
+  .theater-stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .theater-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+
+  @media (max-width: 991.98px) {
+    .detail-poster {
+      min-height: 320px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    function showFallback(container) {
+      var fallback = container.querySelector('.trailer-fallback');
+      var launcher = container.querySelector('.trailer-launcher');
+      if (launcher) {
+        launcher.classList.add('visually-hidden');
+      }
+      if (fallback) {
+        fallback.classList.remove('visually-hidden');
+      }
+    }
+
+    function createTrailerFrame(container) {
+      var videoId = container.dataset.videoId || '';
+      var embedBase = container.dataset.embedBase || '';
+      var watchUrl = container.dataset.watchUrl || '';
+
+      if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+        showFallback(container);
+        return;
+      }
+
+      var frame = document.createElement('iframe');
+      frame.className = 'trailer-frame';
+      frame.title = 'YouTube trailer player';
+      frame.loading = 'lazy';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
+      frame.src = embedBase + videoId + '?rel=0&modestbranding=1&playsinline=1';
+
+      var fallbackTimer = window.setTimeout(function () {
+        var fallback = container.querySelector('.trailer-fallback');
+        if (fallback) {
+          fallback.classList.remove('visually-hidden');
+          if (watchUrl) {
+            fallback.querySelector('a').href = watchUrl;
+          }
+        }
+      }, 8000);
+
+      frame.addEventListener('load', function () {
+        window.clearTimeout(fallbackTimer);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(frame);
+    }
+
+    document.querySelectorAll('.trailer-player-shell').forEach(function (container) {
+      var thumbnail = container.querySelector('.trailer-thumbnail');
+      var launcher = container.querySelector('.trailer-launcher');
+
+      if (thumbnail) {
+        thumbnail.addEventListener('error', function () {
+          showFallback(container);
+        });
+      }
+
+      if (launcher) {
+        launcher.addEventListener('click', function () {
+          createTrailerFrame(container);
+        });
+      }
+    });
+  }());
+</script>
+{% endblock %}

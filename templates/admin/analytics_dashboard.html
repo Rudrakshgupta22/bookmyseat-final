@@ -1,0 +1,112 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Admin Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="analytics-dashboard">
+  <h1>Admin Analytics Dashboard</h1>
+  <p>Generated at {{ analytics.generated_at|date:"F d, Y H:i:s" }}</p>
+
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <h2>Daily Revenue</h2>
+      <p>INR {{ analytics.revenue.daily }}</p>
+    </div>
+    <div class="analytics-card">
+      <h2>Weekly Revenue</h2>
+      <p>INR {{ analytics.revenue.weekly }}</p>
+    </div>
+    <div class="analytics-card">
+      <h2>Monthly Revenue</h2>
+      <p>INR {{ analytics.revenue.monthly }}</p>
+    </div>
+    <div class="analytics-card">
+      <h2>Lifetime Revenue</h2>
+      <p>INR {{ analytics.revenue.lifetime }}</p>
+    </div>
+  </div>
+
+  <div class="analytics-section">
+    <div class="analytics-panel">
+      <h2>Most Popular Movies</h2>
+      <ul>
+        {% for item in analytics.popular_movies %}
+          <li>{{ item.movie__name }}: {{ item.total_bookings }} bookings</li>
+        {% empty %}
+          <li>No booking data available yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="analytics-panel">
+      <h2>Busiest Theaters</h2>
+      <ul>
+        {% for item in analytics.busiest_theaters %}
+          <li>
+            {{ item.name }} ({{ item.movie__name }}):
+            {{ item.booked_seats }}/{{ item.total_seats }} seats,
+            {{ item.occupancy_rate }}% occupancy
+          </li>
+        {% empty %}
+          <li>No theater occupancy data available yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="analytics-section">
+    <div class="analytics-panel">
+      <h2>Peak Booking Hours</h2>
+      <ul>
+        {% for item in analytics.peak_booking_hours %}
+          <li>{{ item.hour }}:00 - {{ item.total_bookings }} bookings</li>
+        {% empty %}
+          <li>No peak-hour booking data available yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="analytics-panel">
+      <h2>Cancellation Rate</h2>
+      <p>Total Attempts: {{ analytics.cancellation.total_attempts }}</p>
+      <p>Cancelled/Failed/Expired: {{ analytics.cancellation.cancelled_attempts }}</p>
+      <p>Rate: {{ analytics.cancellation.rate_percent }}%</p>
+    </div>
+  </div>
+
+  <div class="analytics-links">
+    <a href="{% url 'admin:index' %}">Back to Admin</a>
+    <a href="{% url 'admin_analytics_dashboard_api' %}">Analytics API</a>
+  </div>
+</div>
+
+<style>
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .analytics-card,
+  .analytics-panel {
+    background: #fff;
+    border: 1px solid #d5d5d5;
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .analytics-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .analytics-links {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+  }
+</style>
+{% endblock %}

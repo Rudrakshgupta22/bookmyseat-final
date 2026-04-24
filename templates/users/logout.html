@@ -1,0 +1,8 @@
+{% extends "users/basic.html" %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>You have been logged out.</h2>
+    <p>Click <a href="{% url 'login' %}">here</a> to log in again.</p>
+  </div>
+{% endblock %}
