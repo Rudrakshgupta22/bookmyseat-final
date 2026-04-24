@@ -135,7 +135,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # <-- ADDED FOR VERCEL TO NOT CRASH
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- CLOUDINARY MEDIA SETTINGS ---
 MEDIA_URL = '/media/'
