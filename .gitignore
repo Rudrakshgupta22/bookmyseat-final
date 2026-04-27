@@ -21,6 +21,7 @@ db.sqlite3
 *.pot
 *.pyc
 *.pyo
+staticfiles/
 
 # IDEs and editors
 .vscode/

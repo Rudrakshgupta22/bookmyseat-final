@@ -128,7 +128,11 @@ python manage.py seed_movies
 ## Step 4: Static Files & Media
 
 ### 4.1 Static Files
-Django static files are served automatically by Vercel.
+Use Django's standard staticfiles pipeline on Vercel:
+- Keep `STATIC_URL=/static/`
+- Set `STATIC_ROOT=BASE_DIR / 'staticfiles'`
+- Run `python manage.py collectstatic --noinput` during the Vercel build
+- Avoid legacy `builds` routing in `vercel.json`, because it can exclude collected static assets from the deployment bundle
 
 ### 4.2 Media Files
 For production, use cloud storage:
@@ -193,7 +197,10 @@ Update ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS with your custom domain.
 
 1. **ModuleNotFoundError**: Check requirements.txt
 2. **Database connection failed**: Verify DATABASE_URL
-3. **Static files not loading**: Check STATIC_URL settings
+3. **Static files not loading**:
+   - Confirm `STATIC_URL` is `/static/`
+   - Confirm the build log includes `python manage.py collectstatic --noinput`
+   - If you still have a legacy `builds` block in `vercel.json`, remove it or explicitly allowlist static output
 4. **Email not sending**: Verify email credentials
 5. **Payment failed**: Check Stripe configuration
 
