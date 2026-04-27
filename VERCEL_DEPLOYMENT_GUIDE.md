@@ -7,7 +7,7 @@ This guide will help you deploy your Django BookMyShow clone application to Verc
 - Vercel account (https://vercel.com)
 - GitHub account
 - Node.js installed locally (for Vercel CLI)
-- Python 3.10 environment
+- Python 3.12 environment
 
 ## Step 1: Prepare Your Project for Vercel
 
@@ -221,7 +221,7 @@ vercel --prod
 bookmyseat/
 ├── vercel.json          # Vercel configuration
 ├── requirements.txt     # Python dependencies
-├── runtime.txt         # Python version (3.10.13)
+├── runtime.txt         # Python version (3.12)
 ├── bookmyseat/         # Django project
 ├── movies/             # Django app
 ├── users/              # Django app
