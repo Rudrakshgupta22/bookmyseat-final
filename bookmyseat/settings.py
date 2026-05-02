@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',         # <-- ADDED FOR CLOUDINARY
     'django.contrib.staticfiles',
+    'cloudinary_storage',         # <-- ADDED FOR CLOUDINARY
     'cloudinary',                 # <-- ADDED FOR CLOUDINARY
     'users',
     'movies',
@@ -146,6 +146,8 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Keep django.contrib.staticfiles before cloudinary_storage so Django's built-in
+# collectstatic command is used for app static files and admin assets.
 
 # Caching & Analytics
 CACHES = {

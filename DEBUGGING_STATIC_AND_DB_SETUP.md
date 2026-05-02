@@ -15,10 +15,13 @@ This document is a step-by-step debug guide for the live site when:
 Open `bookmyseat/settings.py` and verify:
 - `STATIC_URL = '/static/'`
 - `STATIC_ROOT = BASE_DIR / 'staticfiles'`
-- `STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'`
+- `STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'`
 - `whitenoise.middleware.WhiteNoiseMiddleware` is present in `MIDDLEWARE`
+- `django.contrib.staticfiles` appears before `cloudinary_storage` in `INSTALLED_APPS`
 
 This project is configured to collect static assets into `staticfiles` and serve them using WhiteNoise.
+
+> Note: `cloudinary_storage` ships its own `collectstatic` command. If `cloudinary_storage` appears before `django.contrib.staticfiles`, it can override Django's built-in staticfiles command and prevent admin assets from being collected correctly.
 
 ## 3. Confirm build / collected static files
 
@@ -35,6 +38,14 @@ ls staticfiles/admin/css
 ```
 
 If the CSS files exist locally, the next step is verifying the deployment includes `staticfiles`.
+
+If `collectstatic` reports `0 static files copied` locally, check which command is being used:
+
+```bash
+python manage.py shell -c "from django.core.management import get_commands; print(get_commands().get('collectstatic'))"
+```
+
+It should print `django.contrib.staticfiles`.
 
 ## 4. Vercel deployment routing fix
 
