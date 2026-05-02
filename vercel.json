@@ -1,9 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "python manage.py collectstatic --noinput",
-  "functions": {
-    "bookmyseat/wsgi.py": {
-      "includeFiles": "staticfiles/**"
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/staticfiles/$1"
     }
-  }
+  ]
 }
