@@ -134,9 +134,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-WHITENOISE_USE_FINDERS = IS_VERCEL
-WHITENOISE_MANIFEST_STRICT = not IS_VERCEL
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # --- CLOUDINARY MEDIA SETTINGS ---
 MEDIA_URL = '/media/'
