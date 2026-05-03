@@ -2,10 +2,12 @@
 Django settings for bookmyseat project.
 """
 
-from pathlib import Path
 import os
-from dotenv import load_dotenv
+from pathlib import Path
+
 import dj_database_url  # <-- ADDED FOR VERCEL DATABASE
+from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,6 +20,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-local-placeholder')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 IS_VERCEL = os.getenv('VERCEL') == '1'
+APP_ENV = os.getenv('APP_ENV', 'development').lower()
+IS_PRODUCTION = APP_ENV == 'production' or IS_VERCEL
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
@@ -124,6 +128,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_COOKIE_NAME = os.getenv('SESSION_COOKIE_NAME', 'bookmyseat_sessionid')
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', str(IS_PRODUCTION)).lower() == 'true'
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+SESSION_EXPIRE_AT_BROWSER_CLOSE = os.getenv('SESSION_EXPIRE_AT_BROWSER_CLOSE', 'True').lower() == 'true'
+SESSION_SAVE_EVERY_REQUEST = False
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', str(IS_PRODUCTION)).lower() == 'true'
+CSRF_COOKIE_HTTPONLY = os.getenv('CSRF_COOKIE_HTTPONLY', 'True').lower() == 'true'
+CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', str(IS_PRODUCTION)).lower() == 'true'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = os.getenv('SECURE_REFERRER_POLICY', 'same-origin')
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000' if IS_PRODUCTION else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
+SECURE_HSTS_PRELOAD = IS_PRODUCTION
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -150,15 +171,42 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # collectstatic command is used for app static files and admin assets.
 
 # Caching & Analytics
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'bookmyseat-analytics-cache',
-        'TIMEOUT': 60,
-    }
-}
-
 ANALYTICS_CACHE_TIMEOUT_SECONDS = int(os.getenv('ANALYTICS_CACHE_TIMEOUT_SECONDS', '60'))
+ANALYTICS_REFRESH_INTERVAL_SECONDS = int(os.getenv('ANALYTICS_REFRESH_INTERVAL_SECONDS', '30'))
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION = (
+    os.getenv('ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION', 'False').lower() == 'true'
+)
+
+if IS_PRODUCTION and not REDIS_URL and not ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION:
+    raise ImproperlyConfigured(
+        'REDIS_URL must be configured in production so admin analytics caching is '
+        'shared consistently across live instances.'
+    )
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'TIMEOUT': ANALYTICS_CACHE_TIMEOUT_SECONDS,
+            'OPTIONS': {
+                'socket_connect_timeout': 5,
+                'socket_timeout': 5,
+                'retry_on_timeout': True,
+            },
+        }
+    }
+    ANALYTICS_CACHE_BACKEND = 'redis'
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'bookmyseat-analytics-cache',
+            'TIMEOUT': ANALYTICS_CACHE_TIMEOUT_SECONDS,
+        }
+    }
+    ANALYTICS_CACHE_BACKEND = 'locmem'
 
 LOGGING = {
     'version': 1,

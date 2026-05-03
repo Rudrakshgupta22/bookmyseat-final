@@ -3,33 +3,44 @@
 {% block title %}Admin Analytics Dashboard{% endblock %}
 
 {% block content %}
-<div class="analytics-dashboard">
-  <h1>Admin Analytics Dashboard</h1>
-  <p>Generated at {{ analytics.generated_at|date:"F d, Y H:i:s" }}</p>
+<div class="analytics-dashboard" data-refresh-interval="{{ analytics.refresh_interval_seconds }}">
+  <div class="analytics-header">
+    <div>
+      <h1>Admin Analytics Dashboard</h1>
+      <p class="analytics-meta">
+        Generated at <span id="generated-at">{{ analytics.generated_at|date:"F d, Y H:i:s" }}</span>
+      </p>
+      <p class="analytics-meta">
+        Cache backend: <span id="cache-backend">{{ analytics.cache_backend|upper }}</span> |
+        Refresh interval: <span id="refresh-interval">{{ analytics.refresh_interval_seconds }}</span>s
+      </p>
+    </div>
+    <button id="manual-refresh" class="analytics-button" type="button">Refresh Now</button>
+  </div>
 
   <div class="analytics-grid">
     <div class="analytics-card">
       <h2>Daily Revenue</h2>
-      <p>INR {{ analytics.revenue.daily }}</p>
+      <p id="revenue-daily">INR {{ analytics.revenue.daily }}</p>
     </div>
     <div class="analytics-card">
       <h2>Weekly Revenue</h2>
-      <p>INR {{ analytics.revenue.weekly }}</p>
+      <p id="revenue-weekly">INR {{ analytics.revenue.weekly }}</p>
     </div>
     <div class="analytics-card">
       <h2>Monthly Revenue</h2>
-      <p>INR {{ analytics.revenue.monthly }}</p>
+      <p id="revenue-monthly">INR {{ analytics.revenue.monthly }}</p>
     </div>
     <div class="analytics-card">
       <h2>Lifetime Revenue</h2>
-      <p>INR {{ analytics.revenue.lifetime }}</p>
+      <p id="revenue-lifetime">INR {{ analytics.revenue.lifetime }}</p>
     </div>
   </div>
 
   <div class="analytics-section">
     <div class="analytics-panel">
       <h2>Most Popular Movies</h2>
-      <ul>
+      <ul id="popular-movies">
         {% for item in analytics.popular_movies %}
           <li>{{ item.movie__name }}: {{ item.total_bookings }} bookings</li>
         {% empty %}
@@ -40,7 +51,7 @@
 
     <div class="analytics-panel">
       <h2>Busiest Theaters</h2>
-      <ul>
+      <ul id="busiest-theaters">
         {% for item in analytics.busiest_theaters %}
           <li>
             {{ item.name }} ({{ item.movie__name }}):
@@ -57,7 +68,7 @@
   <div class="analytics-section">
     <div class="analytics-panel">
       <h2>Peak Booking Hours</h2>
-      <ul>
+      <ul id="peak-booking-hours">
         {% for item in analytics.peak_booking_hours %}
           <li>{{ item.hour }}:00 - {{ item.total_bookings }} bookings</li>
         {% empty %}
@@ -68,24 +79,43 @@
 
     <div class="analytics-panel">
       <h2>Cancellation Rate</h2>
-      <p>Total Attempts: {{ analytics.cancellation.total_attempts }}</p>
-      <p>Cancelled/Failed/Expired: {{ analytics.cancellation.cancelled_attempts }}</p>
-      <p>Rate: {{ analytics.cancellation.rate_percent }}%</p>
+      <p>Total Attempts: <span id="cancellation-total">{{ analytics.cancellation.total_attempts }}</span></p>
+      <p>Cancelled/Failed/Expired: <span id="cancellation-cancelled">{{ analytics.cancellation.cancelled_attempts }}</span></p>
+      <p>Rate: <span id="cancellation-rate">{{ analytics.cancellation.rate_percent }}</span>%</p>
     </div>
   </div>
 
   <div class="analytics-links">
     <a href="{% url 'admin:index' %}">Back to Admin</a>
-    <a href="{% url 'admin_analytics_dashboard_api' %}">Analytics API</a>
+    <a href="{% url 'admin_analytics_dashboard_api' %}" target="_blank" rel="noopener noreferrer">Analytics API</a>
   </div>
+
+  <p id="analytics-status" class="analytics-status" aria-live="polite"></p>
 </div>
 
 <style>
+  .analytics-dashboard {
+    display: grid;
+    gap: 20px;
+  }
+
+  .analytics-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .analytics-meta,
+  .analytics-status {
+    color: #52606d;
+    margin: 6px 0 0;
+  }
+
   .analytics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-    margin: 24px 0;
   }
 
   .analytics-card,
@@ -94,19 +124,136 @@
     border: 1px solid #d5d5d5;
     border-radius: 10px;
     padding: 20px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .analytics-card p {
+    font-size: 1.5rem;
+    margin-bottom: 0;
   }
 
   .analytics-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 16px;
-    margin-bottom: 16px;
   }
 
   .analytics-links {
     display: flex;
     gap: 16px;
-    margin-top: 24px;
+  }
+
+  .analytics-button {
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 18px;
+    background: #0f5fe0;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .analytics-button:hover {
+    background: #0b4db8;
+  }
+
+  @media (max-width: 768px) {
+    .analytics-header {
+      flex-direction: column;
+    }
   }
 </style>
+
+<script>
+  (function () {
+    const container = document.querySelector('.analytics-dashboard');
+    if (!container) {
+      return;
+    }
+
+    const refreshInterval = Number(container.dataset.refreshInterval || 30) * 1000;
+    const statusNode = document.getElementById('analytics-status');
+    const refreshButton = document.getElementById('manual-refresh');
+    const endpoint = "{% url 'admin_analytics_dashboard_api' %}";
+
+    function setStatus(message) {
+      statusNode.textContent = message;
+    }
+
+    function renderList(targetId, items, formatter, emptyMessage) {
+      const target = document.getElementById(targetId);
+      target.innerHTML = '';
+
+      if (!items.length) {
+        const fallback = document.createElement('li');
+        fallback.textContent = emptyMessage;
+        target.appendChild(fallback);
+        return;
+      }
+
+      items.forEach((item) => {
+        const node = document.createElement('li');
+        node.textContent = formatter(item);
+        target.appendChild(node);
+      });
+    }
+
+    async function refreshAnalytics(forceRefresh) {
+      setStatus(forceRefresh ? 'Running a fresh analytics query...' : 'Refreshing analytics...');
+
+      try {
+        const response = await fetch(forceRefresh ? `${endpoint}?fresh=1` : endpoint, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error('Analytics refresh failed.');
+        }
+
+        const payload = await response.json();
+        document.getElementById('generated-at').textContent = new Date(payload.generated_at).toLocaleString();
+        document.getElementById('cache-backend').textContent = String(payload.cache_backend || 'locmem').toUpperCase();
+        document.getElementById('refresh-interval').textContent = payload.refresh_interval_seconds;
+        document.getElementById('revenue-daily').textContent = `INR ${payload.revenue.daily}`;
+        document.getElementById('revenue-weekly').textContent = `INR ${payload.revenue.weekly}`;
+        document.getElementById('revenue-monthly').textContent = `INR ${payload.revenue.monthly}`;
+        document.getElementById('revenue-lifetime').textContent = `INR ${payload.revenue.lifetime}`;
+        document.getElementById('cancellation-total').textContent = payload.cancellation.total_attempts;
+        document.getElementById('cancellation-cancelled').textContent = payload.cancellation.cancelled_attempts;
+        document.getElementById('cancellation-rate').textContent = payload.cancellation.rate_percent;
+
+        renderList(
+          'popular-movies',
+          payload.popular_movies,
+          (item) => `${item.movie__name}: ${item.total_bookings} bookings`,
+          'No booking data available yet.'
+        );
+        renderList(
+          'busiest-theaters',
+          payload.busiest_theaters,
+          (item) => `${item.name} (${item.movie__name}): ${item.booked_seats}/${item.total_seats} seats, ${item.occupancy_rate}% occupancy`,
+          'No theater occupancy data available yet.'
+        );
+        renderList(
+          'peak-booking-hours',
+          payload.peak_booking_hours,
+          (item) => `${item.hour}:00 - ${item.total_bookings} bookings`,
+          'No peak-hour booking data available yet.'
+        );
+
+        setStatus(`Analytics refreshed at ${new Date().toLocaleTimeString()}.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    refreshButton.addEventListener('click', function () {
+      refreshAnalytics(true);
+    });
+    window.setInterval(function () {
+      refreshAnalytics(false);
+    }, refreshInterval);
+  })();
+</script>
 {% endblock %}

@@ -2,10 +2,15 @@
 # Copy these keys into Vercel project settings and replace the placeholder values.
 
 DJANGO_SECRET_KEY=your-django-secret-key
+APP_ENV=production
 DEBUG=False
 ALLOWED_HOSTS=your-app-name.vercel.app
 CSRF_TRUSTED_ORIGINS=https://your-app-name.vercel.app
 DATABASE_URL=postgresql://username:password@host:port/database_name
+REDIS_URL=redis://default:password@host:port
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_SSL_REDIRECT=True
 
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-email-app-password
@@ -30,7 +35,9 @@ STRIPE_API_BASE=https://api.stripe.com
 STRIPE_WEBHOOK_TOLERANCE_SECONDS=300
 
 ANALYTICS_CACHE_TIMEOUT_SECONDS=60
+ANALYTICS_REFRESH_INTERVAL_SECONDS=30
 
 # Notes:
 # - Vercel automatically provides VERCEL=1 in its environment, so you don't need to set it.
 # - RUN_MAIN is only used by Django's dev auto-reloader and should not be set manually.
+# - Set ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION=True only if you intentionally want a single-instance fallback.

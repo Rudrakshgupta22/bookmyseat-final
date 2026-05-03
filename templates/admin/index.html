@@ -1,0 +1,146 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .analytics-module {
+    margin-bottom: 20px;
+  }
+
+  .analytics-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .analytics-summary-card {
+    border: 1px solid #d5d5d5;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fff;
+  }
+
+  .analytics-summary-card h3 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+  }
+
+  .analytics-summary-card p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .analytics-module-actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .analytics-inline-link {
+    display: inline-block;
+  }
+
+  .analytics-inline-status {
+    color: #52606d;
+    margin-top: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if user.is_active and user.is_staff %}
+    <div class="module analytics-module">
+      <table>
+        <caption>
+          <a href="{% url 'admin_analytics_dashboard' %}" class="section" title="Admin analytics dashboard">
+            Analytics Overview
+          </a>
+        </caption>
+        <tbody>
+          <tr>
+            <th scope="row">Real-time booking analytics</th>
+            <td>
+              Revenue, popular movies, busiest theaters, peak booking hours, and cancellation rate
+            </td>
+            <td>
+              <a class="analytics-inline-link" href="{% url 'admin_analytics_dashboard' %}">Open dashboard</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="analytics-summary-grid">
+        <div class="analytics-summary-card">
+          <h3>Daily Revenue</h3>
+          <p id="admin-analytics-daily">Loading...</p>
+        </div>
+        <div class="analytics-summary-card">
+          <h3>Weekly Revenue</h3>
+          <p id="admin-analytics-weekly">Loading...</p>
+        </div>
+        <div class="analytics-summary-card">
+          <h3>Monthly Revenue</h3>
+          <p id="admin-analytics-monthly">Loading...</p>
+        </div>
+        <div class="analytics-summary-card">
+          <h3>Cancellation Rate</h3>
+          <p id="admin-analytics-cancellation">Loading...</p>
+        </div>
+      </div>
+
+      <div class="analytics-module-actions">
+        <a href="{% url 'admin_analytics_dashboard' %}">Open full analytics dashboard</a>
+        <a href="{% url 'admin_analytics_dashboard_api' %}" target="_blank" rel="noopener noreferrer">Open analytics API</a>
+      </div>
+      <p id="admin-analytics-status" class="analytics-inline-status" aria-live="polite"></p>
+    </div>
+  {% endif %}
+
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+
+<script>
+  (function () {
+    const daily = document.getElementById('admin-analytics-daily');
+    const weekly = document.getElementById('admin-analytics-weekly');
+    const monthly = document.getElementById('admin-analytics-monthly');
+    const cancellation = document.getElementById('admin-analytics-cancellation');
+    const status = document.getElementById('admin-analytics-status');
+
+    if (!daily || !weekly || !monthly || !cancellation || !status) {
+      return;
+    }
+
+    fetch("{% url 'admin_analytics_dashboard_api' %}", {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('Unable to load analytics preview.');
+        }
+        return response.json();
+      })
+      .then(function (payload) {
+        daily.textContent = `INR ${payload.revenue.daily}`;
+        weekly.textContent = `INR ${payload.revenue.weekly}`;
+        monthly.textContent = `INR ${payload.revenue.monthly}`;
+        cancellation.textContent = `${payload.cancellation.rate_percent}%`;
+        status.textContent = `Updated ${new Date(payload.generated_at).toLocaleString()}`;
+      })
+      .catch(function (error) {
+        status.textContent = error.message;
+        daily.textContent = 'Unavailable';
+        weekly.textContent = 'Unavailable';
+        monthly.textContent = 'Unavailable';
+        cancellation.textContent = 'Unavailable';
+      });
+  })();
+</script>
+{% endblock %}

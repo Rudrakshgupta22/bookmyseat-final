@@ -7,7 +7,9 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import HttpResponse
+from django.test import RequestFactory
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -450,6 +452,7 @@ class MovieTrailerSecurityTests(TestCase):
 )
 class AdminAnalyticsDashboardTests(TestCase):
     def setUp(self):
+        self.factory = RequestFactory()
         self.admin_user = User.objects.create_user(
             username='adminuser',
             email='admin@example.com',
@@ -499,18 +502,29 @@ class AdminAnalyticsDashboardTests(TestCase):
         invalidate_admin_dashboard_cache()
 
     def test_admin_dashboard_requires_staff_access(self):
-        response = self.client.get(reverse('admin_analytics_dashboard'))
+        anonymous_request = self.factory.get(reverse('admin_analytics_dashboard'))
+        anonymous_request.user = type('AnonymousUserStub', (), {'is_authenticated': False})()
+
+        from .admin_dashboard_views import admin_dashboard
+
+        response = admin_dashboard(anonymous_request)
         self.assertEqual(response.status_code, 302)
 
-        self.client.login(username='normaluser', password='normalpass123')
-        response = self.client.get(reverse('admin_analytics_dashboard'))
-        self.assertEqual(response.status_code, 302)
+        staffless_request = self.factory.get(reverse('admin_analytics_dashboard'))
+        staffless_request.user = self.normal_user
 
-        self.client.logout()
-        self.client.login(username='adminuser', password='adminpass123')
-        response = self.client.get(reverse('admin_analytics_dashboard'))
+        with self.assertRaisesMessage(PermissionDenied, 'permission'):
+            admin_dashboard(staffless_request)
+
+        request = self.factory.get(reverse('admin_analytics_dashboard'))
+        request.user = self.admin_user
+
+        with patch('movies.admin_dashboard_views.render', return_value=HttpResponse('Admin Analytics Dashboard')) as mocked_render:
+            response = admin_dashboard(request)
+
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Admin Analytics Dashboard')
+        self.assertEqual(response.content.decode('utf-8'), 'Admin Analytics Dashboard')
+        mocked_render.assert_called_once()
 
     def test_dashboard_analytics_uses_aggregation_and_cache(self):
         invalidate_admin_dashboard_cache()
@@ -523,3 +537,26 @@ class AdminAnalyticsDashboardTests(TestCase):
         self.assertEqual(analytics['popular_movies'][0]['total_bookings'], 1)
         self.assertEqual(analytics['cancellation']['total_attempts'], 1)
         self.assertIsNotNone(cache.get(ANALYTICS_CACHE_KEY))
+        self.assertEqual(analytics['refresh_interval_seconds'], 30)
+        self.assertEqual(analytics['cache_backend'], 'locmem')
+
+    def test_admin_analytics_api_rejects_unauthenticated_and_non_staff_users(self):
+        response = self.client.get(reverse('admin_analytics_dashboard_api'))
+        self.assertEqual(response.status_code, 401)
+
+        self.client.login(username='normaluser', password='normalpass123')
+        response = self.client.get(reverse('admin_analytics_dashboard_api'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_analytics_api_returns_serialized_payload_for_staff(self):
+        self.client.login(username='adminuser', password='adminpass123')
+
+        response = self.client.get(reverse('admin_analytics_dashboard_api'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('max-age=0', response['Cache-Control'])
+        payload = response.json()
+        self.assertEqual(payload['revenue']['lifetime'], 25000)
+        self.assertEqual(payload['cache_backend'], 'locmem')
+        self.assertEqual(payload['refresh_interval_seconds'], 30)
+        self.assertIn('generated_at', payload)

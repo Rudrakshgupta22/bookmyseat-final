@@ -141,6 +141,11 @@ class Theater(models.Model):
     movie = models.ForeignKey(Movie,on_delete=models.CASCADE,related_name='theaters')
     time= models.DateTimeField()
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['movie', 'time']),
+        ]
+
     def __str__(self):
         return f'{self.name} - {self.movie.name} at {self.time}'
 
@@ -148,6 +153,12 @@ class Seat(models.Model):
     theater = models.ForeignKey(Theater,on_delete=models.CASCADE,related_name='seats')
     seat_number = models.CharField(max_length=10)
     is_booked=models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['theater', 'is_booked']),
+            models.Index(fields=['theater', 'seat_number']),
+        ]
 
     def __str__(self):
         return f'{self.seat_number} in {self.theater.name}'
@@ -187,6 +198,7 @@ class BookingBatch(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
+            models.Index(fields=['finalized_at']),
             models.Index(fields=['booking_reference']),
             models.Index(fields=['payment_id']),
             models.Index(fields=['created_at']),

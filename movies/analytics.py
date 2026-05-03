@@ -12,10 +12,11 @@ from .models import Booking, BookingBatch, Theater
 ANALYTICS_CACHE_KEY = 'movies_admin_dashboard_analytics_v1'
 
 
-def get_admin_dashboard_analytics():
-    cached_value = cache.get(ANALYTICS_CACHE_KEY)
-    if cached_value is not None:
-        return cached_value
+def get_admin_dashboard_analytics(force_refresh=False):
+    if not force_refresh:
+        cached_value = cache.get(ANALYTICS_CACHE_KEY)
+        if cached_value is not None:
+            return cached_value
 
     now = timezone.now()
     day_start = now - timezone.timedelta(days=1)
@@ -95,6 +96,8 @@ def get_admin_dashboard_analytics():
             'rate_percent': cancellation_rate,
         },
         'generated_at': now,
+        'refresh_interval_seconds': getattr(settings, 'ANALYTICS_REFRESH_INTERVAL_SECONDS', 30),
+        'cache_backend': getattr(settings, 'ANALYTICS_CACHE_BACKEND', 'locmem'),
     }
 
     cache.set(
