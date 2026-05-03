@@ -1,10 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "python manage.py collectstatic --noinput",
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/staticfiles/$1"
-    }
-  ]
+  "buildCommand": "python manage.py collectstatic --noinput"
 }
