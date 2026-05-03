@@ -157,6 +157,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_USE_FINDERS = DEBUG or IS_VERCEL
+WHITENOISE_AUTOREFRESH = DEBUG
 
 # --- CLOUDINARY MEDIA SETTINGS ---
 MEDIA_URL = '/media/'
