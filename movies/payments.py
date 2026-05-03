@@ -238,13 +238,13 @@ def create_stripe_checkout_session(request, payment_transaction):
     )
 
     payment_transaction.gateway_checkout_session_id = response.get('id', '')
-    payment_transaction.gateway_checkout_url = response.get('url', '')
+    # Redirect immediately with Stripe's response URL instead of persisting it here.
+    # Hosted checkout URLs can exceed legacy varchar limits in production databases.
     payment_transaction.status = PaymentTransaction.STATUS_PENDING
     payment_transaction.last_error = ''
     payment_transaction.save(
         update_fields=[
             'gateway_checkout_session_id',
-            'gateway_checkout_url',
             'status',
             'last_error',
             'updated_at',

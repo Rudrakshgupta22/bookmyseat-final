@@ -25,7 +25,11 @@ from .models import (
     SeatHold,
     Theater,
 )
-from .payments import build_checkout_session_payload, cleanup_expired_payment_holds
+from .payments import (
+    build_checkout_session_payload,
+    cleanup_expired_payment_holds,
+    create_stripe_checkout_session,
+)
 
 
 @override_settings(
@@ -284,6 +288,45 @@ class PaymentLifecycleTests(TestCase):
         minimum_expected = int((timezone.now() + timedelta(minutes=30)).timestamp()) - 5
 
         self.assertGreaterEqual(checkout_expires_at, minimum_expected)
+
+    @patch('movies.payments.stripe_api_request')
+    def test_checkout_creation_does_not_persist_long_hosted_checkout_url(self, mocked_stripe_api_request):
+        batch = BookingBatch.objects.create(
+            user=self.user,
+            movie=self.movie,
+            theater=self.theater,
+            recipient_email=self.user.email,
+            total_tickets=1,
+            currency='inr',
+            amount_total=25000,
+            status=BookingBatch.STATUS_PENDING_PAYMENT,
+            hold_expires_at=timezone.now() + timedelta(minutes=2),
+        )
+        transaction = PaymentTransaction.objects.create(
+            booking_batch=batch,
+            provider=PaymentTransaction.PROVIDER_STRIPE,
+            status=PaymentTransaction.STATUS_INITIATED,
+            amount=25000,
+            currency='inr',
+            idempotency_key='idem_checkout_url_test',
+        )
+        mocked_stripe_api_request.return_value = {
+            'id': 'cs_test_long_url',
+            'url': 'https://checkout.stripe.test/session/' + ('x' * 500),
+        }
+
+        class DummyRequest:
+            def build_absolute_uri(self, path):
+                return f'http://testserver{path}'
+
+        response = create_stripe_checkout_session(DummyRequest(), transaction)
+
+        transaction.refresh_from_db()
+        self.assertEqual(response['id'], 'cs_test_long_url')
+        self.assertEqual(transaction.gateway_checkout_session_id, 'cs_test_long_url')
+        self.assertIn('checkout.stripe.test/session/', response['url'])
+        self.assertIn(transaction.gateway_checkout_url, [None, ''])
+        self.assertEqual(transaction.status, PaymentTransaction.STATUS_PENDING)
 
     def test_process_next_due_email_sends_confirmation(self):
         batch = BookingBatch.objects.create(
