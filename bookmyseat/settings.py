@@ -2,17 +2,18 @@
 Django settings for bookmyseat project.
 """
 
+import logging
 import os
 from pathlib import Path
 
 import dj_database_url  # <-- ADDED FOR VERCEL DATABASE
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-local-placeholder')
@@ -179,9 +180,9 @@ ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION = (
 )
 
 if IS_PRODUCTION and not REDIS_URL and not ALLOW_IN_MEMORY_CACHE_IN_PRODUCTION:
-    raise ImproperlyConfigured(
-        'REDIS_URL must be configured in production so admin analytics caching is '
-        'shared consistently across live instances.'
+    logger.warning(
+        'REDIS_URL is not configured in production. Falling back to per-instance '
+        'in-memory cache for admin analytics until Redis is added.'
     )
 
 if REDIS_URL:
