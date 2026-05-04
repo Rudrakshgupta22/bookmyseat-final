@@ -7,11 +7,10 @@ from django.urls import re_path
 from movies.admin_dashboard_views import admin_dashboard, admin_dashboard_api
 urlpatterns = []
 
-if settings.DEBUG or getattr(settings, 'IS_VERCEL', False):
-    # Vercel may forward /static requests into Django instead of serving them
-    # from the edge CDN. Use Django's staticfiles finder-based view as a
-    # fallback so admin assets still resolve in that case.
-    urlpatterns.append(re_path(r'^static/(?P<path>.*)$', staticfiles_serve, {'insecure': True}))
+# Vercel may forward /static requests into Django instead of serving them
+# from the edge CDN. Keep an explicit fallback route in Django so admin
+# assets still resolve regardless of the runtime environment flags.
+urlpatterns.append(re_path(r'^static/(?P<path>.*)$', staticfiles_serve, {'insecure': True}))
 
 urlpatterns += [
     path('admin/analytics/', admin_dashboard, name='admin_analytics_dashboard'),
