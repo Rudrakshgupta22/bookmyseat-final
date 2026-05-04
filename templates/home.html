@@ -130,7 +130,7 @@
         <a href="{% url 'movie_detail' movie.id %}" class="text-decoration-none">
           <div class="card h-100">
             <img
-              src="{% if movie.image %}{{ movie.image.url }}{% else %}https://via.placeholder.com/400x300?text=Movie+Poster{% endif %}"
+              src="{% if movie.image.name %}{{ movie.image.url }}{% else %}https://via.placeholder.com/400x300?text=Movie+Poster{% endif %}"
               class="card-img-top"
               alt="{{ movie.name }}"
               height="300"

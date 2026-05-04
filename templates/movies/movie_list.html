@@ -135,7 +135,7 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card h-100 shadow-sm movie-card">
                         <img
-                            src="{% if movie.image %}{{ movie.image.url }}{% else %}https://via.placeholder.com/400x250?text=Movie+Poster{% endif %}"
+                            src="{% if movie.image.name %}{{ movie.image.url }}{% else %}https://via.placeholder.com/400x250?text=Movie+Poster{% endif %}"
                             class="card-img-top"
                             alt="{{ movie.name }}"
                             style="height: 250px; object-fit: cover;"
