@@ -34,6 +34,13 @@ STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
 STRIPE_API_BASE=https://api.stripe.com
 STRIPE_WEBHOOK_TOLERANCE_SECONDS=300
 
+# --- CLOUDINARY ---
+CLOUDINARY_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+# Optional: use a full Cloudinary URL instead of separate vars.
+# CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+
 ANALYTICS_CACHE_TIMEOUT_SECONDS=60
 ANALYTICS_REFRESH_INTERVAL_SECONDS=30
 
