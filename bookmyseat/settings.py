@@ -23,6 +23,8 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 IS_VERCEL = os.getenv('VERCEL') == '1'
 APP_ENV = os.getenv('APP_ENV', 'development').lower()
 IS_PRODUCTION = APP_ENV == 'production' or IS_VERCEL
+if IS_VERCEL and os.getenv('ALLOW_DEBUG_ON_VERCEL', 'False').lower() != 'true':
+    DEBUG = False
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
@@ -155,7 +157,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'public' / 'static' if IS_VERCEL else BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 WHITENOISE_USE_FINDERS = DEBUG or IS_VERCEL
 WHITENOISE_AUTOREFRESH = DEBUG
