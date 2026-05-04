@@ -1,14 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput",
-  "routes": [
+  "functions": {
+    "bookmyseat/wsgi.py": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
     {
-      "src": "/static/(.*)",
-      "dest": "/staticfiles/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "bookmyseat/wsgi.py"
+      "source": "/(.*)",
+      "destination": "/bookmyseat/wsgi.py"
     }
   ]
 }
